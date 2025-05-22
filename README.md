@@ -35,11 +35,66 @@ used.
 
 • Genus Script file with .tcl file Extension commands are executed one by one to synthesize the netlist.
 
+## ALU.v:
+```
+module ALU (
+    input  [3:0] A, B,
+    input  [2:0] ALU_Sel,
+    output reg [3:0] ALU_Out,
+    output reg CarryOut
+);
+    always @(*) begin
+        case (ALU_Sel)
+            3'b000: {CarryOut, ALU_Out} = A + B;
+            3'b001: {CarryOut, ALU_Out} = A - B;
+            3'b010: ALU_Out = A & B;
+            3'b011: ALU_Out = A | B;
+            3'b100: ALU_Out = A ^ B;
+            3'b101: ALU_Out = ~A;
+            3'b110: ALU_Out = A << 1;
+            3'b111: ALU_Out = A >> 1;
+            default: ALU_Out = 4'b0000;
+        endcase
+    end
+endmodule
+```
+## ALU_run.tcl:
+```
+read_libs /cadence/install/FOUNDRY-01/digital/90nm/dig/lib/slow.lib
+read_hdl ALU.v
+elaborate
+read_sdc alu_design_constrains.sdc 
+syn_generic
+report_area
+syn_map
+report_area
+syn_opt
+report_area 
+report_area > alu_area.txt
+report_power > alu_power.txt
+write_hdl > alu_netlist.v
+gui_show
+```
+## input_constraints:
+```
+create_clock -name clk -period 10 [get_ports clk]
+set_input_delay 2.0 -clock clk [get_ports {a b op}]
+set_output_delay 2.0 -clock clk [get_ports {result carry_out zero_flag}]
+set_driving_cell -lib_cell INVX1 [get_ports {a b op}]
+set_load 0.1 [get_ports {result carry_out zero_flag}]
+```
+
 #### Synthesis RTL Schematic :
+
+![Screenshot (78)](https://github.com/user-attachments/assets/e0fe8f62-8513-4d2c-b12d-72a1c3025308)
 
 #### Area report:
 
+![Screenshot (75)](https://github.com/user-attachments/assets/5f702150-2f0d-4d6b-b9a6-41e2d5d175e5)
+
 #### Power Report:
+
+![Screenshot (74)](https://github.com/user-attachments/assets/df763a58-00ec-4aa5-9773-afbd48caae12)
 
 #### Result: 
 
